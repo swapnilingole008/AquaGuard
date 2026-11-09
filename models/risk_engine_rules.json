@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "name": "AgriRiskRuleEngine",
+  "description": "Rule-based thresholds for precision agricultural risk assessment and real-time farmer alerts",
+  "rules": {
+    "irrigation": {
+      "soil_moisture_thresholds_percent": {
+        "sandy": { "critical_dry": 15.0, "optimal_min": 25.0, "optimal_max": 40.0 },
+        "loamy": { "critical_dry": 20.0, "optimal_min": 35.0, "optimal_max": 60.0 },
+        "clayey": { "critical_dry": 25.0, "optimal_min": 45.0, "optimal_max": 75.0 }
+      },
+      "evapotranspiration_triggers": {
+        "high_eto_mm_per_day": 5.5,
+        "consecutive_days_without_rain": 4
+      },
+      "advisory": {
+        "critical": "Urgent irrigation required! Soil moisture has dropped below critical root uptake threshold.",
+        "warning": "Soil moisture trending low. Schedule irrigation within 24 to 48 hours.",
+        "optimal": "Soil moisture levels are within optimal range. No irrigation required today."
+      }
+    },
+    "drought": {
+      "stages": {
+        "mild_stress": {
+          "consecutive_dry_days": 10,
+          "rainfall_deficit_pct": 30.0,
+          "soil_moisture_pct_max": 30.0,
+          "severity": "WARNING",
+          "action": "Implement moisture conservation techniques (mulching, inter-cultivation) and deficit drip irrigation."
+        },
+        "moderate_drought": {
+          "consecutive_dry_days": 18,
+          "rainfall_deficit_pct": 50.0,
+          "soil_moisture_pct_max": 20.0,
+          "severity": "ALERT",
+          "action": "Prioritize critical crop growth stages for irrigation. Apply anti-transpirants or shade netting if viable."
+        },
+        "severe_drought": {
+          "consecutive_dry_days": 28,
+          "rainfall_deficit_pct": 75.0,
+          "soil_moisture_pct_max": 12.0,
+          "severity": "CRITICAL",
+          "action": "Immediate contingency irrigation required. Trigger state drought assistance notifications."
+        }
+      }
+    },
+    "flood_and_waterlogging": {
+      "thresholds": {
+        "heavy_rainfall_24h_mm": 64.5,
+        "very_heavy_rainfall_24h_mm": 115.5,
+        "extremely_heavy_rainfall_24h_mm": 204.4,
+        "soil_saturation_pct": 95.0,
+        "standing_water_hours_critical": 24
+      },
+      "advisory": {
+        "flash_flood": "Heavy downpour alert. Clear farm drainage trenches immediately and protect harvested produce.",
+        "waterlogging_risk": "Soil reached full saturation with stagnant water risk. Facilitate surface runoff to prevent root rot and hypoxia."
+      }
+    },
+    "weather_extremes": {
+      "heatwave": {
+        "temp_celsius_threshold": 40.0,
+        "temp_departure_above_normal_c": 4.5,
+        "action": "Apply light, frequent sprinkler irrigation in early mornings or evenings. Protect nursery and flowering crops."
+      },
+      "frost_and_coldwave": {
+        "min_temp_celsius": 4.0,
+        "action": "Light nighttime irrigation or smoke generation around orchard borders to raise ambient micro-climate temperatures."
+      },
+      "high_wind_storm": {
+        "wind_speed_kmh": 45.0,
+        "action": "Provide staking to tall crops (banana, sugarcane, maize, tomato) and postpone chemical spraying."
+      }
+    },
+    "pest_disease_microclimate": {
+      "fungal_blight_risk": {
+        "min_temp_c": 18.0,
+        "max_temp_c": 28.0,
+        "humidity_pct_min": 85.0,
+        "duration_hours": 36,
+        "disease_target": "Late Blight / Downy Mildew / Rust",
+        "action": "Microclimate favors rapid spore germination. Inspect leaf undersides and apply preventive bio-fungicide."
+      }
+    }
+  }
+}
+

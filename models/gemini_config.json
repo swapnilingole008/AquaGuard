@@ -1,0 +1,19 @@
+{
+  "model_family": "gemini-1.5-flash",
+  "system_instruction": "You are 'Kisan Mitra', an expert agricultural AI scientist and advisory copilot. Your purpose is to bridge complex machine learning models (leaf disease CNN, crop yield XGBoost, mandi price LSTM/Prophet forecasts, and sensor risk rules) with actionable, practical farming advice. Communicate with clear, compassionate, and farmer-centric language. Always provide step-by-step guidance including organic/biological and chemical options, accurate dosages, and safety precautions. Support multi-language interactions (English, Hindi, Marathi, Telugu, etc.) according to the user's preference.",
+  "generation_config": {
+    "temperature": 0.4,
+    "top_p": 0.95,
+    "max_output_tokens": 1024
+  },
+  "prompts": {
+    "explain_crop_disease": "The leaf image diagnostic CNN identified the crop condition as: '{disease_name}' with {confidence_pct}% confidence.\n\nContext:\n- Crop: {crop}\n- Observed Symptoms: {symptoms}\n\nTask:\n1. Explain what this disease is in simple terms that a farmer can understand.\n2. Detail the root cause (fungal, bacterial, viral, nutrient deficiency, pest vector).\n3. Provide immediate cultural and biological management practices.\n4. Provide recommended chemical spray options with exact dilution ratios (per litre of water) and safety withholding periods.\n5. Offer preventive advice for upcoming growth stages.",
+
+    "explain_yield_prediction": "The XGBoost model predicted the crop yield to be {predicted_yield} quintals/hectare for {crop} under:\n- Area: {area_acres} acres\n- Soil: {soil_type}\n- NPK: {n_p_k}\n- Rainfall: {rainfall_mm} mm\n- Projected Cost: ₹{cultivation_cost}/acre\n- Projected Profit: ₹{estimated_profit}/acre\n\nTask:\n1. Explain why this yield is predicted based on the input soil nutrition and rainfall.\n2. Identify any limiting factors (e.g. low potassium, deficient rainfall).\n3. Provide 3 actionable steps the farmer can take to improve profitability and reduce input costs.",
+
+    "explain_mandi_forecast": "The time-series forecasting models (LSTM & Prophet) analyzed historical mandi arrival and pricing data for {commodity}:\n- Current Mandi Price: ₹{current_price}/quintal\n- 7-Day Forecast: ₹{forecast_7d}/quintal\n- 14-Day Forecast: ₹{forecast_14d}/quintal\n- Trend Direction: {trend_direction}\n- Market Demand Index: {demand_index}\n\nTask:\n1. Advise the farmer whether to sell their harvested crop immediately or hold for better mandi rates.\n2. Highlight nearby mandis or alternative selling channels (e-NAM, FPO aggregation).\n3. Explain the seasonal demand drivers behind this price movement in plain terms.",
+
+    "explain_risk_alerts": "The Rule-Based Risk Engine generated the following alerts for the farm:\n{alerts_summary}\n\nCurrent Weather & Soil Telemetry:\n{telemetry_summary}\n\nTask:\n1. Prioritize these alerts in order of operational urgency.\n2. Provide direct, pragmatic instructions the farmer must take today and tomorrow to avoid crop damage or financial loss."
+  }
+}
+

@@ -1,0 +1,190 @@
+{
+    "Year": {
+        "min": 2015.0,
+        "max": 2025.0
+    },
+    "Month": {
+        "min": 1.0,
+        "max": 12.0
+    },
+    "Rainfall_mm": {
+        "min": 36.04,
+        "max": 999.7790862832699
+    },
+    "Temperature_C": {
+        "min": 10.133288382484684,
+        "max": 39.98735157015577
+    },
+    "Fertilizer": {
+        "min": 59.46,
+        "max": 94.69
+    },
+    "N": {
+        "min": 0.011019848183657643,
+        "max": 199.99189037886947
+    },
+    "P": {
+        "min": 0.05476296768779365,
+        "max": 99.99075244455794
+    },
+    "K": {
+        "min": 0.1292628207572033,
+        "max": 99.94972238392889
+    },
+    "is_low_rainfall": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "is_high_rainfall": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "is_low_temp": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "is_high_temp": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "is_extreme_temp": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "rain_temp_interaction": {
+        "min": 1066.0631999999998,
+        "max": 39091.146555120984
+    },
+    "rain_squared": {
+        "min": 1298.8816,
+        "max": 999558.2213694099
+    },
+    "temp_squared": {
+        "min": 102.68353344259907,
+        "max": 1598.988285595239
+    },
+    "total_npk": {
+        "min": 23.525123133658887,
+        "max": 382.13230213275085
+    },
+    "npk_balance": {
+        "min": 3.3534321964773426,
+        "max": 391.05176740023796
+    },
+    "n_ratio": {
+        "min": 0.00011234007439472066,
+        "max": 0.9745212970368607
+    },
+    "is_low_npk": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "good_tea_zone": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "good_rubber_zone": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "good_sugarcane_zone": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "good_cinnamon_zone": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "good_rice_zone": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "drought_stress": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "cold_stress": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "heat_stress": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "Crop_Cinnamon": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "Crop_Rice": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "Crop_Rubber": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "Crop_Sugarcane": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "Crop_Tea": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Anuradhapura": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Badulla": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Batticaloa": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Galle": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Jaffna": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Kalutara": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Kandy": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Kegalle": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Kurunegala": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Matara": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Nuwara Eliya": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Polonnaruwa": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Ratnapura": {
+        "min": 0.0,
+        "max": 1.0
+    },
+    "District_Trincomalee": {
+        "min": 0.0,
+        "max": 1.0
+    }
+}

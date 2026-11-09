@@ -1,0 +1,9 @@
+{
+  "min": 4600.0,
+  "max": 48500.0,
+  "scale": 2.2779042410547845e-05,
+  "data_range": 43900.0,
+  "window_size": 30,
+  "commodity": "Arecanut / Agricultural Produce",
+  "unit": "Rs./Quintal"
+}
