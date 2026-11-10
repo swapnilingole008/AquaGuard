@@ -1,9 +1,21 @@
 import sys
 import os
+from pathlib import Path
 import numpy as np
 
+# Safe environment setup
+_root = Path(__file__).resolve().parent
+os.environ.setdefault('KERAS_HOME', str(_root / '.keras'))
+os.environ.setdefault('MPLCONFIGDIR', str(_root / '.cache' / 'matplotlib'))
+os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', '0')
+try:
+    import google.protobuf.runtime_version
+    google.protobuf.runtime_version.ValidateProtobufRuntimeVersion = lambda *args, **kwargs: None
+except Exception:
+    pass
+
 # Add project root to path
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, str(_root))
 
 from models import hub
 
@@ -19,13 +31,16 @@ def main():
     print("      CNN Top Predictions:")
     for r in res_cnn:
         print(f"        * {r['crop']} - {r['disease']} ({r['confidence_pct']}%)")
+        print(f"          Symptoms: {r.get('symptoms', '')[:60]}...")
 
-    # 2. XGBoost Crop Yield
+    # 2. XGBoost Crop Yield (47 Features with District)
     print("\n[2/6] Testing XGBoost Crop Yield & Economics Regressor...")
     sample_features = {
+        'crop': 'Rice',
+        'district': 'Kandy',
         'Year': 2024,
         'Month': 7,
-        'Rainfall_mm': 120.0,
+        'Rainfall_mm': 650.0,
         'Temperature_C': 26.5,
         'Fertilizer': 75.0,
         'N': 80.0,
@@ -36,18 +51,22 @@ def main():
         'mandi_rate_per_quintal': 2800.0
     }
     res_xgb = hub.predict_crop_yield(sample_features)
-    print(f"      Yield: {res_xgb['predicted_yield_tonnes_per_hectare']} tonnes/ha")
-    print(f"      Est. Production: {res_xgb['estimated_production_quintals']} quintals")
+    print(f"      Crop: {res_xgb['crop']} | District: {res_xgb['district']}")
+    print(f"      Yield: {res_xgb['predicted_yield_tonnes_per_hectare']} tonnes/ha ({res_xgb['predicted_yield_quintals_per_hectare']} quintals/ha)")
+    print(f"      Est. Production: {res_xgb['estimated_production_quintals']} quintals on {res_xgb['area_acres']} acres")
     print(f"      Cultivation Cost: ₹{res_xgb['projected_cultivation_cost_inr']:,}")
-    print(f"      Est. Net Profit: ₹{res_xgb['estimated_net_profit_inr']:,}")
+    print(f"      Est. Gross Revenue: ₹{res_xgb['estimated_gross_revenue_inr']:,}")
+    print(f"      Est. Net Profit: ₹{res_xgb['estimated_net_profit_inr']:,} ({res_xgb['profit_margin_pct']}%)")
+    print(f"      Features Evaluated: {res_xgb['features_used_count']} features")
 
     # 3. LSTM Mandi Price
     print("\n[3/6] Testing LSTM Mandi Price Sequence Model...")
-    dummy_prices = [32000.0 + (i * 35.0) for i in range(30)]
+    dummy_prices = hub.get_sample_30_prices()
     res_lstm = hub.predict_next_mandi_price(dummy_prices)
-    print(f"      Last Price: ₹{res_lstm['last_recorded_price']:,}/quintal")
-    print(f"      Predicted Next Price: ₹{res_lstm['predicted_next_modal_price_rs_per_quintal']:,}/quintal")
-    print(f"      Trend: {res_lstm['trend']} ({res_lstm['projected_change_rs']:+} ₹)")
+    print(f"      Commodity: {res_lstm['commodity']}")
+    print(f"      Last Price: ₹{res_lstm['last_recorded_price']:,} / quintal")
+    print(f"      Predicted Next Price: ₹{res_lstm['predicted_next_modal_price_rs_per_quintal']:,} / quintal")
+    print(f"      Trend: {res_lstm['trend']} ({res_lstm['projected_change_rs']:+} ₹, {res_lstm['projected_change_pct']}%)")
 
     # 4. Prophet Time-Series
     print("\n[4/6] Testing Prophet Time-Series Model...")
@@ -85,4 +104,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
