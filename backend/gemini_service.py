@@ -41,7 +41,9 @@ LANGUAGE_NAMES = {
 class GeminiService:
     def __init__(self):
         self.api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash").strip()
+        self.live_source = f"Google Gemini ({self.model_name})"
+        self.offline_source = "Kisan Mitra AI (Agronomic Engine)"
         self._sdk_model = None
         self._init_client()
 
@@ -85,25 +87,31 @@ class GeminiService:
             except Exception as e:
                 print(f"[GeminiService] SDK generation error: {e}")
 
-        # 2. Try REST API direct
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.4, "maxOutputTokens": 1024}
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=8.0) as resp:
-                data = json.loads(resp.read().decode())
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return text.strip()
-        except Exception as e:
-            print(f"[GeminiService] REST query error: {e}")
-            return None
+        # 2. Try REST API direct with model fallback
+        models_to_try = [self.model_name]
+        if self.model_name != "gemini-1.5-flash":
+            models_to_try.append("gemini-1.5-flash")
+
+        for target_model in models_to_try:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={self.api_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.4, "maxOutputTokens": 1024}
+                }
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req, timeout=8.0) as resp:
+                    data = json.loads(resp.read().decode())
+                    text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    self.live_source = f"Google Gemini ({target_model})"
+                    return text.strip()
+            except Exception as e:
+                print(f"[GeminiService] REST query error with {target_model}: {e}")
+        return None
 
     def get_disease_guidance(self, disease_name: str, confidence_pct: float, crop: str, language: str = "en") -> Dict[str, Any]:
         """Provides pathology explanation, organic/chemical treatments, and preventive measures."""
@@ -114,7 +122,7 @@ class GeminiService:
         ai_reply = self.query_gemini(prompt, language=language)
         if ai_reply:
             return {
-                "source": "Google Gemini 1.5 Flash (Live)",
+                "source": self.live_source,
                 "advice": ai_reply,
                 "is_live_gemini": True
             }
@@ -146,7 +154,7 @@ class GeminiService:
             )
 
         return {
-            "source": "Agronomic Knowledge System (Configure GEMINI_API_KEY in .env for live Gemini 1.5 Flash)",
+            "source": self.offline_source,
             "advice": advice,
             "is_live_gemini": False
         }
@@ -165,7 +173,7 @@ class GeminiService:
         ai_reply = self.query_gemini(prompt, language=language)
         if ai_reply:
             return {
-                "source": "Google Gemini 1.5 Flash (Live)",
+                "source": self.live_source,
                 "advice": ai_reply,
                 "is_live_gemini": True,
                 "suggestions": [s.strip() for s in ai_reply.split("\n") if s.strip().startswith(("-", "•", "1.", "2.", "3."))][:3]
@@ -192,7 +200,7 @@ class GeminiService:
             ]
 
         return {
-            "source": "Agronomic Knowledge System (Configure GEMINI_API_KEY in .env for live Gemini 1.5 Flash)",
+            "source": self.offline_source,
             "advice": "\n".join([f"• {s}" for s in suggestions]),
             "is_live_gemini": False,
             "suggestions": suggestions
@@ -210,7 +218,7 @@ class GeminiService:
         ai_reply = self.query_gemini(prompt, language=language)
         if ai_reply:
             return {
-                "source": "Google Gemini 1.5 Flash (Live)",
+                "source": self.live_source,
                 "advice": ai_reply,
                 "is_live_gemini": True
             }
@@ -232,7 +240,7 @@ class GeminiService:
                 advice = f"Subdued seasonal sentiment detected for {commodity} due to upcoming market arrivals. Recommended Strategy: Liquidate dry, marketable produce at prevailing ₹{current_price:,.0f}/quintal rates within 72 hours to avert holding depreciation."
 
         return {
-            "source": "Agronomic Knowledge System (Configure GEMINI_API_KEY in .env for live Gemini 1.5 Flash)",
+            "source": self.offline_source,
             "advice": advice,
             "is_live_gemini": False
         }
@@ -247,7 +255,7 @@ class GeminiService:
         ai_reply = self.query_gemini(prompt, language=language)
         if ai_reply:
             return {
-                "source": "Google Gemini 1.5 Flash (Live)",
+                "source": self.live_source,
                 "reply": ai_reply,
                 "is_live_gemini": True,
                 "followups": [
@@ -309,7 +317,7 @@ class GeminiService:
             ]
 
         return {
-            "source": "Agronomic Knowledge System (Configure GEMINI_API_KEY in .env for live Gemini 1.5 Flash)",
+            "source": self.offline_source,
             "reply": reply,
             "is_live_gemini": False,
             "followups": followups
