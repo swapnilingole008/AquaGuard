@@ -28,7 +28,7 @@ class GeminiAdvisoryEngine:
             import google.generativeai as genai
             genai.configure(api_key=self.api_key)
             self.client = genai.GenerativeModel(
-                model_name=self.config.get("model_family", "gemini-1.5-flash"),
+                model_name=os.environ.get("GEMINI_MODEL") or self.config.get("model_family", "gemini-2.0-flash"),
                 system_instruction=self.config.get("system_instruction")
             )
         except Exception:
