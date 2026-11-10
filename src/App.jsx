@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sprout,
   LayoutDashboard,
@@ -35,50 +35,78 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-const navigation = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Crop Advisory", icon: Wheat },
-  { label: "Disease Detection", icon: ScanSearch },
-  { label: "Smart Irrigation", icon: Droplets },
-  { label: "Weather & Risk", icon: CloudSun },
-  { label: "Yield & Profit", icon: ChartNoAxesCombined },
-  { label: "Market Prices", icon: Store },
-  { label: "Soil & Satellite", icon: MapPinned },
-  { label: "AI Farming Assistant", icon: Bot },
-  { label: "Notifications", icon: Bell, count: 3 },
+import CropAdvisoryTab from "./components/CropAdvisoryTab";
+import DiseaseDetectionTab from "./components/DiseaseDetectionTab";
+import SmartIrrigationTab from "./components/SmartIrrigationTab";
+import WeatherRiskTab from "./components/WeatherRiskTab";
+import YieldProfitTab from "./components/YieldProfitTab";
+import MarketPricesTab from "./components/MarketPricesTab";
+import SoilSatelliteTab from "./components/SoilSatelliteTab";
+import AIAssistantTab from "./components/AIAssistantTab";
+import NotificationsTab from "./components/NotificationsTab";
+import LanguageSelector from "./components/LanguageSelector";
+import { useTranslation } from "./i18n";
+import { api } from "./components/api";
+
+class TabErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Tab rendering error:", error, info);
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.active !== this.props.active && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="tab-container" style={{ padding: "28px" }}>
+          <div className="alert-banner error-banner">
+            <AlertTriangle size={20} />
+            <div>
+              <strong>Section Display Exception</strong>
+              <p style={{ margin: "4px 0 0", fontSize: "12.5px" }}>
+                {this.state.error?.message || "An unexpected error occurred while rendering this module."}
+              </p>
+            </div>
+          </div>
+          <button
+            className="action-button primary-button"
+            style={{ width: "220px", marginTop: "16px" }}
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Retry Loading Module
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const navItems = [
+  { id: "Dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { id: "Crop Advisory", labelKey: "nav.crop_advisory", icon: Wheat },
+  { id: "Disease Detection", labelKey: "nav.disease_detection", icon: ScanSearch },
+  { id: "Smart Irrigation", labelKey: "nav.smart_irrigation", icon: Droplets },
+  { id: "Weather & Risk", labelKey: "nav.weather_risk", icon: CloudSun },
+  { id: "Yield & Profit", labelKey: "nav.yield_profit", icon: ChartNoAxesCombined },
+  { id: "Market Prices", labelKey: "nav.market_prices", icon: Store },
+  { id: "Soil & Satellite", labelKey: "nav.soil_satellite", icon: MapPinned },
+  { id: "AI Farming Assistant", labelKey: "nav.ai_assistant", icon: Bot },
+  { id: "Notifications", labelKey: "nav.notifications", icon: Bell },
 ];
 
-const weather = [
-  { day: "Today", icon: Sun, temp: "31°", condition: "Sunny" },
-  { day: "Tue", icon: CloudSun, temp: "29°", condition: "Partly cloudy" },
-  { day: "Wed", icon: CloudRain, temp: "27°", condition: "Light rain" },
-  { day: "Thu", icon: CloudRain, temp: "26°", condition: "Rain" },
-  { day: "Fri", icon: Sun, temp: "30°", condition: "Sunny" },
-];
+function Sidebar({ active, setActive, open, close, unreadCount }) {
+  const { t } = useTranslation();
 
-const alerts = [
-  {
-    type: "warning",
-    title: "Irrigation recommended",
-    detail:
-      "Soil moisture is below the preferred range for your selected crop.",
-    time: "Today · 9:15 AM",
-  },
-  {
-    type: "info",
-    title: "Rain expected tomorrow",
-    detail: "Check your irrigation schedule to avoid unnecessary watering.",
-    time: "Today · 8:30 AM",
-  },
-  {
-    type: "success",
-    title: "Crop health check",
-    detail: "Your latest crop health observation is marked as healthy.",
-    time: "Yesterday · 5:40 PM",
-  },
-];
-
-function Sidebar({ active, setActive, open, close }) {
   return (
     <>
       {open && (
@@ -94,8 +122,8 @@ function Sidebar({ active, setActive, open, close }) {
             <Sprout size={25} strokeWidth={2.3} />
           </div>
           <div>
-            <div className="brand-name">AgriGuard</div>
-            <div className="brand-caption">SMART FARMING PLATFORM</div>
+            <div className="brand-name">{t("common.brand_name")}</div>
+            <div className="brand-caption">{t("common.brand_caption")}</div>
           </div>
           <button
             className="icon-button close-menu"
@@ -106,44 +134,61 @@ function Sidebar({ active, setActive, open, close }) {
           </button>
         </div>
 
-        <div className="workspace-label">WORKSPACE</div>
+        <div className="workspace-label">{t("common.workspace")}</div>
         <nav className="nav-list" aria-label="Main navigation">
-          {navigation.map(({ label, icon: Icon, count }) => (
-            <button
-              key={label}
-              className={`nav-item ${active === label ? "active" : ""}`}
-              onClick={() => {
-                setActive(label);
-                close();
-              }}
-            >
-              <Icon size={19} strokeWidth={1.9} />
-              <span>{label}</span>
-              {count && <span className="nav-count">{count}</span>}
-            </button>
-          ))}
+          {navItems.map(({ id, labelKey, icon: Icon }) => {
+            const count = id === "Notifications" ? unreadCount : null;
+            const label = t(labelKey);
+            return (
+              <button
+                key={id}
+                className={`nav-item ${active === id ? "active" : ""}`}
+                onClick={() => {
+                  setActive(id);
+                  close();
+                }}
+              >
+                <Icon size={19} strokeWidth={1.9} />
+                <span>{label}</span>
+                {count > 0 && <span className="nav-count">{count}</span>}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="help-card">
+          <div
+            className="help-card"
+            onClick={() => {
+              setActive("AI Farming Assistant");
+              close();
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <div className="help-icon">
               <CircleHelp size={18} />
             </div>
             <div>
-              <strong>Need a hand?</strong>
-              <p>Visit the farmer help center.</p>
+              <strong>{t("common.need_hand")}</strong>
+              <p>{t("common.ask_kisan_mitra")}</p>
             </div>
             <ArrowUpRight size={15} className="help-arrow" />
           </div>
-          <button className="nav-item secondary-nav">
+          <button
+            className="nav-item secondary-nav"
+            onClick={() => {
+              setActive("Weather & Risk");
+              close();
+            }}
+          >
             <Settings size={19} />
-            <span>Settings</span>
+            <span>{t("common.settings")}</span>
           </button>
           <button className="profile-mini">
             <div className="avatar">RK</div>
             <div className="profile-copy">
-              <strong>Rajesh Kumar</strong>
-              <span>Farmer account</span>
+              <strong>{t("common.farmer_name")}</strong>
+              <span>{t("common.farmer_account")}</span>
             </div>
             <MoreHorizontal size={19} />
           </button>
@@ -153,9 +198,13 @@ function Sidebar({ active, setActive, open, close }) {
   );
 }
 
-function MetricCard({ icon: Icon, label, value, unit, note, trend, tone }) {
+function MetricCard({ icon: Icon, label, value, unit, note, trend, tone, onClick }) {
   return (
-    <article className="metric-card">
+    <article
+      className="metric-card"
+      onClick={onClick}
+      style={{ cursor: onClick ? "pointer" : "default" }}
+    >
       <div className="metric-top">
         <div className={`metric-icon ${tone}`}>
           <Icon size={19} />
@@ -169,54 +218,74 @@ function MetricCard({ icon: Icon, label, value, unit, note, trend, tone }) {
       <div className="metric-label">{label}</div>
       <div className="metric-value">
         {value}
-        <span>{unit}</span>
+        {unit && <span>{unit}</span>}
       </div>
       <div className="metric-note">{note}</div>
     </article>
   );
 }
 
-function WeatherCard() {
+function WeatherCard({ onNavigate, liveData }) {
+  const { t } = useTranslation();
+  const currentTemp = liveData?.current?.temperature_c ?? 31;
+  const currentCondition = liveData?.current?.condition ?? t("dashboard.normal");
+  const humidity = liveData?.current?.humidity_pct ?? 62;
+  const wind = liveData?.current?.wind_speed_kmh ?? 12;
+  const rainChance = liveData?.current?.rain_chance ?? 20;
+
+  const defaultWeather = [
+    { day: t("common.today"), icon: Sun, temp: "31°", condition: "Sunny" },
+    { day: "Tue", icon: CloudSun, temp: "29°", condition: "Partly cloudy" },
+    { day: "Wed", icon: CloudRain, temp: "27°", condition: "Light rain" },
+    { day: "Thu", icon: CloudRain, temp: "26°", condition: "Rain" },
+    { day: "Fri", icon: Sun, temp: "30°", condition: "Sunny" },
+  ];
+
   return (
     <section className="panel weather-panel">
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">LOCAL CONDITIONS</div>
-          <h2>Weather forecast</h2>
+          <div className="eyebrow">{t("dashboard.local_conditions")}</div>
+          <h2>{t("dashboard.weather_forecast")}</h2>
         </div>
-        <button className="text-link">
-          7-day forecast <ArrowUpRight size={14} />
+        <button className="text-link" onClick={() => onNavigate("Weather & Risk")}>
+          {t("dashboard.seven_day_forecast")} <ArrowUpRight size={14} />
         </button>
       </div>
       <div className="weather-current">
         <div className="weather-main">
           <Sun size={39} />
           <div>
-            <strong>31°C</strong>
-            <span>Mostly sunny</span>
+            <strong>{currentTemp}°C</strong>
+            <span>{currentCondition}</span>
           </div>
         </div>
         <div className="weather-details">
           <div>
             <Droplets size={16} />
-            <span>Humidity</span>
-            <strong>62%</strong>
+            <span>{t("dashboard.humidity")}</span>
+            <strong>{humidity}%</strong>
           </div>
           <div>
             <Wind size={16} />
-            <span>Wind</span>
-            <strong>12 km/h</strong>
+            <span>{t("dashboard.wind")}</span>
+            <strong>{wind} km/h</strong>
           </div>
           <div>
             <CloudRain size={16} />
-            <span>Rain chance</span>
-            <strong>20%</strong>
+            <span>{t("dashboard.rain_chance")}</span>
+            <strong>{rainChance}%</strong>
           </div>
         </div>
       </div>
       <div className="forecast-row">
-        {weather.map(({ day, icon: Icon, temp, condition }) => (
-          <div className="forecast-day" key={day}>
+        {defaultWeather.map(({ day, icon: Icon, temp, condition }) => (
+          <div
+            className="forecast-day"
+            key={day}
+            onClick={() => onNavigate("Weather & Risk")}
+            style={{ cursor: "pointer" }}
+          >
             <span>{day}</span>
             <Icon size={21} />
             <strong>{temp}</strong>
@@ -225,77 +294,79 @@ function WeatherCard() {
         ))}
       </div>
       <div className="weather-foot">
-        <MapPin size={14} /> Weather data for your farm location <span>·</span>{" "}
-        Demo preview
+        <MapPin size={14} /> {t("dashboard.weather_foot")}
       </div>
     </section>
   );
 }
 
-function FarmStatus() {
+function FarmStatus({ onNavigate }) {
+  const { t } = useTranslation();
+
   return (
     <section className="panel farm-panel">
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">YOUR FARM</div>
-          <h2>Farm overview</h2>
+          <div className="eyebrow">{t("dashboard.your_farm")}</div>
+          <h2>{t("dashboard.farm_overview")}</h2>
         </div>
-        <button className="icon-button">
+        <button className="icon-button" onClick={() => onNavigate("Soil & Satellite")}>
           <MoreHorizontal size={20} />
         </button>
       </div>
       <div className="farm-visual">
         <div className="farm-visual-overlay">
           <span className="farm-tag">
-            <Leaf size={13} /> Farm status
+            <Leaf size={13} /> {t("dashboard.farm_status")}
           </span>
-          <strong>Looking healthy</strong>
-          <span>Based on the latest recorded observations</span>
+          <strong>{t("dashboard.looking_healthy")}</strong>
+          <span>{t("dashboard.looking_healthy_desc")}</span>
         </div>
       </div>
       <div className="farm-facts">
         <div>
-          <span>Farm location</span>
+          <span>{t("dashboard.farm_location")}</span>
           <strong>
-            <MapPin size={14} /> Nashik, Maharashtra
+            <MapPin size={14} /> {t("dashboard.farm_location_val")}
           </strong>
         </div>
         <div>
-          <span>Total farm area</span>
-          <strong>4.5 acres</strong>
+          <span>{t("dashboard.total_area")}</span>
+          <strong>4.5 {t("common.acres")}</strong>
         </div>
         <div>
-          <span>Current crop</span>
-          <strong>Wheat</strong>
+          <span>{t("dashboard.current_crop")}</span>
+          <strong>{t("dashboard.current_crop_val")}</strong>
         </div>
         <div>
-          <span>Growing stage</span>
-          <strong>Vegetative</strong>
+          <span>{t("dashboard.growing_stage")}</span>
+          <strong>{t("dashboard.growing_stage_val")}</strong>
         </div>
       </div>
-      <button className="outline-button">
-        View farm details <ArrowUpRight size={15} />
+      <button className="outline-button" onClick={() => onNavigate("Soil & Satellite")}>
+        {t("dashboard.view_farm_details")} <ArrowUpRight size={15} />
       </button>
     </section>
   );
 }
 
-function RecommendationCard() {
+function RecommendationCard({ onNavigate }) {
+  const { t } = useTranslation();
+
   return (
     <section className="recommendation">
       <div className="recommendation-symbol">
         <Sprout size={22} />
       </div>
       <div className="recommendation-content">
-        <div className="recommendation-kicker">AGRI-GUARD RECOMMENDATION</div>
-        <h3>Review your irrigation schedule</h3>
-        <p>
-          Check soil moisture before the next watering cycle. Rain is possible
-          in the coming days, so adjust irrigation based on actual field
-          conditions.
-        </p>
-        <button className="recommendation-link">
-          View irrigation guidance <ArrowUpRight size={15} />
+        <div className="recommendation-kicker">{t("dashboard.recommendation_kicker")}</div>
+        <h3>{t("dashboard.recommendation_title")}</h3>
+        <p>{t("dashboard.recommendation_desc")}</p>
+        <button
+          className="recommendation-link"
+          onClick={() => onNavigate("Smart Irrigation")}
+        >
+          {t("dashboard.recommendation_link")} <ArrowUpRight size={15} />
         </button>
       </div>
       <div className="recommendation-art">
@@ -305,23 +376,53 @@ function RecommendationCard() {
   );
 }
 
-function AlertsPanel() {
+function AlertsPanel({ onNavigate, alerts }) {
+  const { t } = useTranslation();
+
+  const defaultAlerts = [
+    {
+      type: "warning",
+      title: "Irrigation recommended",
+      detail: "Soil moisture is below the preferred range for your selected crop.",
+      time: "Today · 9:15 AM",
+    },
+    {
+      type: "info",
+      title: "Rain expected tomorrow",
+      detail: "Check your irrigation schedule to avoid unnecessary watering.",
+      time: "Today · 8:30 AM",
+    },
+    {
+      type: "success",
+      title: "Crop health check",
+      detail: "Your latest crop health observation is marked as healthy.",
+      time: "Yesterday · 5:40 PM",
+    },
+  ];
+
+  const displayAlerts = alerts && alerts.length > 0 ? alerts.slice(0, 3) : defaultAlerts;
+
   return (
     <section className="panel alerts-panel">
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">STAY INFORMED</div>
-          <h2>Recent alerts</h2>
+          <div className="eyebrow">{t("dashboard.stay_informed")}</div>
+          <h2>{t("dashboard.recent_alerts")}</h2>
         </div>
-        <button className="text-link">
-          View all <ArrowUpRight size={14} />
+        <button className="text-link" onClick={() => onNavigate("Notifications")}>
+          {t("common.view_all")} <ArrowUpRight size={14} />
         </button>
       </div>
       <div className="alert-list">
-        {alerts.map((alert, index) => (
-          <div className="alert-row" key={alert.title}>
+        {displayAlerts.map((alert, index) => (
+          <div
+            className="alert-row"
+            key={index}
+            onClick={() => onNavigate("Notifications")}
+            style={{ cursor: "pointer" }}
+          >
             <div className={`alert-symbol ${alert.type}`}>
-              {alert.type === "warning" ? (
+              {alert.type === "warning" || alert.type === "danger" ? (
                 <AlertTriangle size={17} />
               ) : alert.type === "success" ? (
                 <CheckCircle2 size={17} />
@@ -331,7 +432,7 @@ function AlertsPanel() {
             </div>
             <div className="alert-copy">
               <strong>{alert.title}</strong>
-              <p>{alert.detail}</p>
+              <p>{alert.detail || alert.message}</p>
               <span>
                 <Clock3 size={12} /> {alert.time}
               </span>
@@ -344,7 +445,9 @@ function AlertsPanel() {
   );
 }
 
-function MarketPanel() {
+function MarketPanel({ onNavigate }) {
+  const { t } = useTranslation();
+
   const prices = [
     {
       crop: "Wheat",
@@ -368,20 +471,26 @@ function MarketPanel() {
       up: true,
     },
   ];
+
   return (
     <section className="panel market-panel">
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">MARKET SNAPSHOT</div>
-          <h2>Nearby mandi prices</h2>
+          <div className="eyebrow">{t("dashboard.market_snapshot")}</div>
+          <h2>{t("dashboard.nearby_mandi")}</h2>
         </div>
-        <button className="text-link">
-          Explore market <ArrowUpRight size={14} />
+        <button className="text-link" onClick={() => onNavigate("Market Prices")}>
+          {t("dashboard.explore_market")} <ArrowUpRight size={14} />
         </button>
       </div>
       <div className="market-table">
         {prices.map((item) => (
-          <div className="market-row" key={item.crop}>
+          <div
+            className="market-row"
+            key={item.crop}
+            onClick={() => onNavigate("Market Prices")}
+            style={{ cursor: "pointer" }}
+          >
             <div className="crop-badge">
               <Wheat size={17} />
             </div>
@@ -404,37 +513,45 @@ function MarketPanel() {
         ))}
       </div>
       <div className="data-note">
-        Illustrative values · Connect a verified mandi data source for live
-        prices.
+        {t("dashboard.mandi_data_note")}
       </div>
     </section>
   );
 }
 
-function PlaceholderPage({ title }) {
-  const selected = navigation.find((item) => item.label === title);
-  const Icon = selected?.icon || Sprout;
-  return (
-    <div className="placeholder-page">
-      <div className="placeholder-icon">
-        <Icon size={28} />
-      </div>
-      <div className="eyebrow">AGRIGUARD WORKSPACE</div>
-      <h1>{title}</h1>
-      <p>
-        This section is ready for its feature module and backend integration.
-      </p>
-      <div className="placeholder-note">
-        <CircleHelp size={17} /> Connect the relevant API or model to display
-        live, farm-specific information here.
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
+  const { t, language } = useTranslation();
   const [active, setActive] = useState("Dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [liveWeather, setLiveWeather] = useState(null);
+  const [liveAlerts, setLiveAlerts] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(3);
+
+  // Sync baseline live data on app load
+  useEffect(() => {
+    async function initData() {
+      try {
+        const wData = await api.getWeather("Nashik");
+        if (wData) setLiveWeather(wData);
+      } catch (e) {
+        // Fallback gracefully to default weather
+      }
+
+      try {
+        const nData = await api.getNotifications();
+        if (nData?.notifications) {
+          setLiveAlerts(nData.notifications);
+          setUnreadCount(nData.unread_count ?? nData.notifications.length);
+        }
+      } catch (e) {
+        // Fallback to default alerts
+      }
+    }
+    initData();
+  }, []);
+
+  const currentTab = navItems.find((n) => n.id === active);
+  const activeLabel = currentTab ? t(currentTab.labelKey) : active;
 
   return (
     <div className="app-shell">
@@ -443,6 +560,7 @@ export default function App() {
         setActive={setActive}
         open={menuOpen}
         close={() => setMenuOpen(false)}
+        unreadCount={unreadCount}
       />
       <main className="main-area">
         <header className="topbar">
@@ -455,46 +573,52 @@ export default function App() {
               <Menu size={21} />
             </button>
             <div className="breadcrumb">
-              Workspace <span>/</span> <strong>{active}</strong>
+              {t("common.workspace")} <span>/</span> <strong>{activeLabel}</strong>
             </div>
           </div>
           <div className="topbar-actions">
+            {/* Multilingual Selector */}
+            <LanguageSelector />
+
             <div className="date-chip">
               <CalendarDays size={15} /> Monday, 09 November 2026
             </div>
             <button
               className="icon-button notification-button"
               aria-label="Notifications"
+              onClick={() => setActive("Notifications")}
             >
               <Bell size={19} />
-              <i />
+              {unreadCount > 0 && <i />}
             </button>
-            <button className="top-profile">
+            <button className="top-profile" onClick={() => setActive("Soil & Satellite")}>
               <div className="avatar">RK</div>
               <ChevronDown size={15} />
             </button>
           </div>
         </header>
 
-        {active === "Dashboard" ? (
+        {/* Tab Route Switching */}
+        <TabErrorBoundary active={active}>
+        {active === "Dashboard" && (
           <div className="page-content">
             <section className="welcome-row">
               <div>
                 <div className="welcome-kicker">
-                  <span className="live-dot" /> YOUR FARM AT A GLANCE
+                  <span className="live-dot" /> {t("dashboard.glance_eyebrow")}
                 </div>
                 <h1>
-                  Good morning, Rajesh <span>🌱</span>
+                  {t("dashboard.greeting")} <span>🌱</span>
                 </h1>
-                <p>
-                  Here's what's happening on your farm today. Let's grow
-                  smarter.
-                </p>
+                <p>{t("dashboard.subtitle")}</p>
               </div>
-              <button className="farm-selector">
+              <button
+                className="farm-selector"
+                onClick={() => setActive("Soil & Satellite")}
+              >
                 <MapPin size={16} />
                 <span>
-                  <small>SELECTED FARM</small>
+                  <small>{t("common.selected_farm")}</small>
                   <strong>My Farm · Nashik</strong>
                 </span>
                 <ChevronDown size={16} />
@@ -504,66 +628,121 @@ export default function App() {
             <section className="metrics-grid">
               <MetricCard
                 icon={ThermometerSun}
-                label="Temperature"
-                value="31"
+                label={t("dashboard.temp_label")}
+                value={liveWeather?.current?.temperature_c ?? "31"}
                 unit="°C"
-                note="Feels like 33°C today"
-                trend="Normal"
+                note={t("dashboard.temp_note")}
+                trend={t("common.normal")}
                 tone="orange"
+                onClick={() => setActive("Weather & Risk")}
               />
               <MetricCard
                 icon={Droplets}
-                label="Soil moisture"
+                label={t("dashboard.soil_moisture_label")}
                 value="28"
                 unit="%"
-                note="Check irrigation needs"
-                trend="Needs attention"
+                note={t("dashboard.soil_moisture_note")}
+                trend={t("common.attention")}
                 tone="blue"
+                onClick={() => setActive("Smart Irrigation")}
               />
               <MetricCard
                 icon={Leaf}
-                label="Crop health"
-                value="Good"
+                label={t("dashboard.crop_health_label")}
+                value={t("dashboard.crop_health_val")}
                 unit=""
-                note="Latest observation"
-                trend="Healthy"
+                note={t("dashboard.crop_health_note")}
+                trend={t("common.healthy")}
                 tone="green"
+                onClick={() => setActive("Disease Detection")}
               />
               <MetricCard
                 icon={CloudLightning}
-                label="Weather risk"
-                value="Low"
+                label={t("dashboard.weather_risk_label")}
+                value={t("dashboard.weather_risk_val")}
                 unit=""
-                note="No severe alert currently"
-                trend="Stable"
+                note={t("dashboard.weather_risk_note")}
+                trend={t("common.stable")}
                 tone="purple"
+                onClick={() => setActive("Weather & Risk")}
               />
             </section>
 
             <div className="content-grid top-content-grid">
-              <WeatherCard />
-              <FarmStatus />
+              <WeatherCard onNavigate={setActive} liveData={liveWeather} />
+              <FarmStatus onNavigate={setActive} />
             </div>
 
-            <RecommendationCard />
+            <RecommendationCard onNavigate={setActive} />
 
             <div className="content-grid bottom-content-grid">
-              <AlertsPanel />
-              <MarketPanel />
+              <AlertsPanel onNavigate={setActive} alerts={liveAlerts} />
+              <MarketPanel onNavigate={setActive} />
             </div>
 
             <footer className="page-footer">
-              <span>© 2026 AgriGuard · Climate-smart farming support</span>
+              <span>{t("common.footer_rights")}</span>
               <span>
-                <span className="footer-dot" /> Demo dashboard · Sample data
+                <span className="footer-dot" /> {t("common.demo_dashboard")}
               </span>
             </footer>
           </div>
-        ) : (
+        )}
+
+        {active === "Crop Advisory" && (
           <div className="page-content">
-            <PlaceholderPage title={active} />
+            <CropAdvisoryTab />
           </div>
         )}
+
+        {active === "Disease Detection" && (
+          <div className="page-content">
+            <DiseaseDetectionTab />
+          </div>
+        )}
+
+        {active === "Smart Irrigation" && (
+          <div className="page-content">
+            <SmartIrrigationTab />
+          </div>
+        )}
+
+        {active === "Weather & Risk" && (
+          <div className="page-content">
+            <WeatherRiskTab />
+          </div>
+        )}
+
+        {active === "Yield & Profit" && (
+          <div className="page-content">
+            <YieldProfitTab />
+          </div>
+        )}
+
+        {active === "Market Prices" && (
+          <div className="page-content">
+            <MarketPricesTab />
+          </div>
+        )}
+
+        {active === "Soil & Satellite" && (
+          <div className="page-content">
+            <SoilSatelliteTab />
+          </div>
+        )}
+
+        {active === "AI Farming Assistant" && (
+          <div className="page-content">
+            <AIAssistantTab />
+          </div>
+        )}
+
+        {active === "Notifications" && (
+          <div className="page-content">
+            <NotificationsTab />
+          </div>
+        )}
+        </TabErrorBoundary>
       </main>
     </div>
   );
