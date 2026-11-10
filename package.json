@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "uvicorn backend.main:app --port 8000 --reload"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
