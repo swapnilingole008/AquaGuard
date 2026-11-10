@@ -16,6 +16,7 @@ node_modules/
 # Production build output
 dist/
 dist-ssr/
+models/__pycache__/
 
 # Local env files
 .env
