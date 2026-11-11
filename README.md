@@ -1,10 +1,10 @@
-# AgriGuard / BitSparx - AI-Powered Climate-Smart Agriculture Platform
+# AgriGuard - AI-Powered Climate-Smart Agriculture Platform
 
 AgriGuard is a precision agriculture and climate intelligence platform combining deep learning, time-series forecasting, machine learning economics, and multilingual agronomic advisories across 23 regional Indian languages.
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### 1. Install Dependencies
 ```bash
@@ -44,7 +44,7 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
-## 🧠 Integrated Machine Learning & AI Models
+## Integrated Machine Learning & AI Models
 
 | # | Model | Framework | Purpose | Files in `models/` |
 |---|---|---|---|---|
@@ -57,7 +57,7 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
-## 🧪 Verification & Test Suites
+## Verification & Test Suites
 
 You can run direct validation tests across all features, models, endpoints, and language dictionaries:
 
@@ -77,7 +77,7 @@ python test_e2e_vite.py
 
 ---
 
-## 🌐 Full-Stack Architecture
+## Full-Stack Architecture
 
 ```
 BitSparx/
